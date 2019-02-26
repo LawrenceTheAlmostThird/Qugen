@@ -1,0 +1,5 @@
+"This is a sentence"
+"How happy I feel"
+"How are you alive"
+"What is the capital of Assyria"
+"I was doing fine"
