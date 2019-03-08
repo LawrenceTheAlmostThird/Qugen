@@ -1,5 +1,4 @@
 "This is a sentence"
-"How happy I feel"
-"How are you alive"
-"What is the capital of Assyria"
-"I was doing fine"
+"Aunt Jill got married in 1992"
+"The capital of Assyria was Assur"
+"Ants are insects"
