@@ -1,8 +1,0 @@
-"It is meant to generate questions about factual, declarative statements"
-"It is meant to generate what?"
-"This is a statement"
-"This is what?"
-"Ants are insects"
-"Ants are what?"
-"The capital of Assyria was Assur"
-"What was Assur?"
