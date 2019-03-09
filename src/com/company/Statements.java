@@ -10,32 +10,34 @@ public class Statements {
     private Parse sentence;
     private Parse replaceable;
 
-    public static List<Statements> statementsFactory(Parse sentence) {
+    public static List<Statements> statementsFactory(Parse sentence, boolean quiet) {
         List<Statements> allPossibleStatements = new ArrayList<Statements>();
 
         //find all noun phrases
-        addThoseFromTag("NP", sentence, allPossibleStatements);
+        addThoseFromTag("NP", sentence, allPossibleStatements, quiet);
         //find all prepositional phrases
         //addThoseFromTag("PP", sentence, allPossibleStatements);
 
         return allPossibleStatements;
     }
 
-    private static void addThoseFromTag(String type, Parse sentence, List<Statements> allPossibleStatements) {
+    private static void addThoseFromTag(String type, Parse sentence, List<Statements> allPossibleStatements, boolean quiet) {
 
         boolean foundAllPhrases = false;
         int found = 0;
         while (!foundAllPhrases) {
-            Parse phrase = findType(type, sentence, found);
+            Parse phrase = findType(type, sentence, found, quiet);
 
             if (phrase == null) {
                 foundAllPhrases = true;
-                if (found > 1) {
-                    System.out.println("Found " + found + " phrases of type " + type + ".");
-                } else if (found == 1) {
-                    System.out.println("Found 1 phrase of type " + type + ".");
-                } else if (found == 0) {
-                    System.out.println("Found no phrases of type " + type + ".");
+                if (!quiet) {
+                    if (found > 1) {
+                        System.out.println("Found " + found + " phrases of type " + type + ".");
+                    } else if (found == 1) {
+                        System.out.println("Found 1 phrase of type " + type + ".");
+                    } else if (found == 0) {
+                        System.out.println("Found no phrases of type " + type + ".");
+                    }
                 }
                 return;
             } else {
@@ -51,7 +53,7 @@ public class Statements {
         this.replaceable = replaceable;
     }
 
-    private static Parse findType(String type, Parse parse, int alreadyFound) {
+    private static Parse findType(String type, Parse parse, int alreadyFound, boolean quiet) {
         if (parse == null) {
             return null;
         }
@@ -64,7 +66,7 @@ public class Statements {
 
             if (myParse.getType().equals(type)) {
                 if (alreadyFound == 0) {
-                    System.out.println("Found " + type + ": \"" + myParse.getCoveredText() + "\"");
+                    if (!quiet) System.out.println("Found " + type + ": \"" + myParse.getCoveredText() + "\"");
                     return myParse;
                 } else alreadyFound--;
             }
