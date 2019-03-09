@@ -45,7 +45,7 @@ public class Qugen implements Callable<Void> {
     @Option(names = {"-n", "--normalizer"}, description = "Test the normalizer on the input.")
     boolean testNormalization;
 
-    @Option(names={"-c", "--csvformat"}, description = "Indicate that the file path leads to a file in comma-seperated-variable format, as opposed to natural language. Files should be written with each sentence on its own line, enclosed in quotation marks.")
+    @Option(names={"-c", "--csvformat"}, description = "Indicate that the file path leads to a file in comma-seperated-variable format, as opposed to natural language. Files should be written with each sentence on its own line, enclosed in quotation marks. Sentences should not have ending punctuation.")
     boolean CSVFormat;
 
     Scanner scanner = new Scanner(System.in);
@@ -107,15 +107,18 @@ public class Qugen implements Callable<Void> {
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), "utf-8"))) {
                 for (int i = 0; i < sentenceList.size(); i++) {
                     writer.write("\"" + sentenceList.get(i) + "\"\n");
+                    String question = genQuestion(sentenceList.get(i));
+                    writer.write("\"" + question + "\"\n");
+                    System.out.println(); //new line for readability
                 }
+            }
+        } else {
+            for (int i = 0; i < sentenceList.size(); i++) {
+                String question = genQuestion(sentenceList.get(i));
+                System.out.println(); //new line for readability
             }
         }
 
-        for (int i = 0; i < sentenceList.size(); i++) {
-            String question = genQuestion(sentenceList.get(i));
-            //System.out.println(question); //should be the best candidate
-            if (!quiet) System.out.println(); //new line for readability
-        }
         return null;
 
     }
