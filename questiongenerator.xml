@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="questiongenerator" default="all">
+  
+  
+  <property file="questiongenerator.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.war"/>
+    <include name="*.swc"/>
+    <include name="*.zip"/>
+    <include name="*.egg"/>
+    <include name="*.ane"/>
+    <include name="*.jar"/>
+    <include name="*.ear"/>
+    <include name="*.klib"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  
+  <property name="jdk.bin.1.8" value="${jdk.home.1.8}/bin"/>
+  <path id="jdk.classpath.1.8">
+    <fileset dir="${jdk.home.1.8}">
+      <include name="jre/lib/charsets.jar"/>
+      <include name="jre/lib/deploy.jar"/>
+      <include name="jre/lib/ext/access-bridge-64.jar"/>
+      <include name="jre/lib/ext/cldrdata.jar"/>
+      <include name="jre/lib/ext/dnsns.jar"/>
+      <include name="jre/lib/ext/jaccess.jar"/>
+      <include name="jre/lib/ext/jfxrt.jar"/>
+      <include name="jre/lib/ext/localedata.jar"/>
+      <include name="jre/lib/ext/nashorn.jar"/>
+      <include name="jre/lib/ext/sunec.jar"/>
+      <include name="jre/lib/ext/sunjce_provider.jar"/>
+      <include name="jre/lib/ext/sunmscapi.jar"/>
+      <include name="jre/lib/ext/sunpkcs11.jar"/>
+      <include name="jre/lib/ext/zipfs.jar"/>
+      <include name="jre/lib/javaws.jar"/>
+      <include name="jre/lib/jce.jar"/>
+      <include name="jre/lib/jfr.jar"/>
+      <include name="jre/lib/jfxswt.jar"/>
+      <include name="jre/lib/jsse.jar"/>
+      <include name="jre/lib/management-agent.jar"/>
+      <include name="jre/lib/plugin.jar"/>
+      <include name="jre/lib/resources.jar"/>
+      <include name="jre/lib/rt.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.8}"/>
+  <property name="project.jdk.bin" value="${jdk.bin.1.8}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.8"/>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.opennlp.classpath">
+    <fileset dir="${basedir}/openNLP/lib">
+      <patternset refid="library.patterns"/>
+    </fileset>
+  </path>
+  
+  <path id="library.opennlp_(2).classpath">
+    <fileset dir="${basedir}/openNLP/lib">
+      <patternset refid="library.patterns"/>
+    </fileset>
+  </path>
+  
+  <path id="library.super-csv-distribution-2.4.classpath">
+    <fileset dir="${basedir}/super-csv-distribution-2.4.0-bin">
+      <patternset refid="library.patterns"/>
+    </fileset>
+  </path>
+  <!-- Register Custom Compiler Taskdefs -->
+  <property name="javac2.home" value="${idea.home}/lib"/>
+  <path id="javac2.classpath">
+    <fileset dir="${javac2.home}">
+      <include name="javac2.jar"/>
+      <include name="jdom.jar"/>
+      <include name="asm-all*.jar"/>
+      <include name="forms-*.jar"/>
+    </fileset>
+  </path>
+  <target name="register.custom.compilers">
+    <taskdef name="javac2" classname="com.intellij.ant.Javac2" classpathref="javac2.classpath"/>
+    <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="javac2.classpath"/>
+  </target>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module QuestionGenerator -->
+  
+  <dirname property="module.questiongenerator.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.questiongenerator" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.questiongenerator" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.questiongenerator" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.questiongenerator" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="questiongenerator.output.dir" value="${module.questiongenerator.basedir}/out/production/QuestionGenerator"/>
+  <property name="questiongenerator.testoutput.dir" value="${module.questiongenerator.basedir}/out/test/QuestionGenerator"/>
+  
+  <path id="questiongenerator.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="questiongenerator.module.production.classpath">
+    <path refid="${module.jdk.classpath.questiongenerator}"/>
+    <path refid="library.opennlp.classpath"/>
+    <path refid="library.opennlp_(2).classpath"/>
+    <path refid="library.super-csv-distribution-2.4.classpath"/>
+  </path>
+  
+  <path id="questiongenerator.runtime.production.module.classpath">
+    <pathelement location="${questiongenerator.output.dir}"/>
+    <path refid="library.opennlp.classpath"/>
+    <path refid="library.opennlp_(2).classpath"/>
+    <path refid="library.super-csv-distribution-2.4.classpath"/>
+  </path>
+  
+  <path id="questiongenerator.module.classpath">
+    <path refid="${module.jdk.classpath.questiongenerator}"/>
+    <pathelement location="${questiongenerator.output.dir}"/>
+    <path refid="library.opennlp.classpath"/>
+    <path refid="library.opennlp_(2).classpath"/>
+    <pathelement location="${basedir}/lib/apiguardian-api-1.0.0.jar"/>
+    <pathelement location="${basedir}/lib/junit-jupiter-api-5.4.0.jar"/>
+    <pathelement location="${basedir}/lib/junit-platform-commons-1.4.0.jar"/>
+    <pathelement location="${basedir}/lib/opentest4j-1.1.1.jar"/>
+    <path refid="library.super-csv-distribution-2.4.classpath"/>
+  </path>
+  
+  <path id="questiongenerator.runtime.module.classpath">
+    <pathelement location="${questiongenerator.testoutput.dir}"/>
+    <pathelement location="${questiongenerator.output.dir}"/>
+    <path refid="library.opennlp.classpath"/>
+    <path refid="library.opennlp_(2).classpath"/>
+    <pathelement location="${basedir}/lib/apiguardian-api-1.0.0.jar"/>
+    <pathelement location="${basedir}/lib/junit-jupiter-api-5.4.0.jar"/>
+    <pathelement location="${basedir}/lib/junit-platform-commons-1.4.0.jar"/>
+    <pathelement location="${basedir}/lib/opentest4j-1.1.1.jar"/>
+    <path refid="library.super-csv-distribution-2.4.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.questiongenerator">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.questiongenerator">
+    <patternset refid="excluded.from.module.questiongenerator"/>
+  </patternset>
+  
+  <path id="questiongenerator.module.sourcepath">
+    <dirset dir="${module.questiongenerator.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.questiongenerator" depends="compile.module.questiongenerator.production,compile.module.questiongenerator.tests" description="Compile module QuestionGenerator"/>
+  
+  <target name="compile.module.questiongenerator.production" depends="register.custom.compilers" description="Compile module QuestionGenerator; production classes">
+    <mkdir dir="${questiongenerator.output.dir}"/>
+    <javac2 destdir="${questiongenerator.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.questiongenerator}/javac">
+      <compilerarg line="${compiler.args.questiongenerator}"/>
+      <bootclasspath refid="questiongenerator.module.bootclasspath"/>
+      <classpath refid="questiongenerator.module.production.classpath"/>
+      <src refid="questiongenerator.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.questiongenerator"/>
+    </javac2>
+    
+    <copy todir="${questiongenerator.output.dir}">
+      <fileset dir="${module.questiongenerator.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.questiongenerator.tests" depends="register.custom.compilers,compile.module.questiongenerator.production" description="compile module QuestionGenerator; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.questiongenerator" description="cleanup module">
+    <delete dir="${questiongenerator.output.dir}"/>
+    <delete dir="${questiongenerator.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.questiongenerator" description="cleanup all"/>
+  
+  <target name="build.modules" depends="init, clean, compile.module.questiongenerator" description="build all modules"/>
+  
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.questiongenerator:jar" value="${basedir}/out/artifacts/QuestionGenerator_jar"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.QuestionGenerator.jar" value="${artifacts.temp.dir}/QuestionGenerator.jar"/>
+  </target>
+  
+  <target name="artifact.questiongenerator:jar" depends="init.artifacts, compile.module.questiongenerator" description="Build &#39;QuestionGenerator:jar&#39; artifact">
+    <property name="artifact.temp.output.questiongenerator:jar" value="${artifacts.temp.dir}/QuestionGenerator_jar"/>
+    <mkdir dir="${artifact.temp.output.questiongenerator:jar}"/>
+    <jar destfile="${temp.jar.path.QuestionGenerator.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset file="${basedir}/src/main/resources/META-INF/MANIFEST.MF" prefix="META-INF"/>
+      <zipfileset dir="${questiongenerator.output.dir}"/>
+      <zipfileset src="${basedir}/openNLP/lib/hppc-0.7.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jcommander-1.48.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/hk2-api-2.5.0-b30.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-guava-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-core-2.8.4.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-client-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-common-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-server-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/opennlp-uima-1.9.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/grizzly-http-2.3.28.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/hk2-utils-2.5.0-b30.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/javassist-3.20.0-GA.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/opennlp-tools-1.9.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/morfologik-fsa-2.1.3.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/hk2-locator-2.5.0-b30.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/javax.ws.rs-api-2.0.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-databind-2.8.4.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/javax.inject-2.5.0-b30.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-media-jaxb-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/morfologik-tools-2.1.3.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/grizzly-framework-2.3.28.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-jaxrs-base-2.8.4.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/javax.annotation-api-1.2.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-annotations-2.8.4.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/morfologik-stemming-2.1.3.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/grizzly-http-server-2.3.28.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/validation-api-1.1.0.Final.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/osgi-resource-locator-1.0.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-entity-filtering-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/opennlp-brat-annotator-1.9.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/morfologik-fsa-builders-2.1.3.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-media-json-jackson-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/opennlp-morfologik-addon-1.9.1.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/aopalliance-repackaged-2.5.0-b30.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-jaxrs-json-provider-2.8.4.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jersey-container-grizzly2-http-2.25.jar"/>
+      <zipfileset src="${basedir}/openNLP/lib/jackson-module-jaxb-annotations-2.8.4.jar"/>
+      <zipfileset src="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0.jar"/>
+      <zipfileset src="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0-javadoc.jar"/>
+      <zipfileset src="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0-sources.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/hppc-0.7.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jcommander-1.48.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/hk2-api-2.5.0-b30.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-guava-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-core-2.8.4.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-client-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-common-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-server-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/opennlp-uima-1.9.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/grizzly-http-2.3.28.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/hk2-utils-2.5.0-b30.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/javassist-3.20.0-GA.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/opennlp-tools-1.9.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/morfologik-fsa-2.1.3.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/hk2-locator-2.5.0-b30.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/javax.ws.rs-api-2.0.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-databind-2.8.4.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/javax.inject-2.5.0-b30.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-media-jaxb-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/morfologik-tools-2.1.3.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/grizzly-framework-2.3.28.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-jaxrs-base-2.8.4.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/javax.annotation-api-1.2.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-annotations-2.8.4.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/morfologik-stemming-2.1.3.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/grizzly-http-server-2.3.28.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/validation-api-1.1.0.Final.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/osgi-resource-locator-1.0.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-entity-filtering-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/opennlp-brat-annotator-1.9.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/morfologik-fsa-builders-2.1.3.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-media-json-jackson-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/opennlp-morfologik-addon-1.9.1.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/aopalliance-repackaged-2.5.0-b30.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-jaxrs-json-provider-2.8.4.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jersey-container-grizzly2-http-2.25.jar"/>
+      <zipfileset file="${basedir}/openNLP/lib/jackson-module-jaxb-annotations-2.8.4.jar"/>
+      <zipfileset file="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0.jar"/>
+      <zipfileset file="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0-javadoc.jar"/>
+      <zipfileset file="${basedir}/super-csv-distribution-2.4.0-bin/super-csv-2.4.0-sources.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.QuestionGenerator.jar}" tofile="${artifact.temp.output.questiongenerator:jar}/QuestionGenerator.jar"/>
+  </target>
+  
+  <target name="build.all.artifacts" depends="artifact.questiongenerator:jar" description="Build all artifacts">
+    <mkdir dir="${artifact.output.questiongenerator:jar}"/>
+    <copy todir="${artifact.output.questiongenerator:jar}">
+      <fileset dir="${artifact.temp.output.questiongenerator:jar}"/>
+    </copy>
+    
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+  
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
+</project>
