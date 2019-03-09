@@ -1,8 +1,9 @@
 # Qugen
 A question generator built with OpenNLP.
 
-To use, open project with Intellij IDE, and make sure the folders "openNLP" and "super-csv-distrubution-2.4.0-bin" are added as libraries.
-Then run src/com.company/main.class with the input parameter -h.
+To use, navigate to Qugen/out/artifacts/QuestionGenerator_jar, and call:
+java -jar QuestionGenerator.jar -h
+
 This should print the help file, providing further instruction, and satisfy the first task on the project contract.
 
 To test task 1b on the contract, try running the program with "output.txt "It is meant to generate questions about factual, declarative statements."".
