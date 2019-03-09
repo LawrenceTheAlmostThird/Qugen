@@ -1,0 +1,1 @@
+It is meant to generate questions about factual, declarative statements. This is a statement. Ants are insects. The capital of Assyria was Assur.
