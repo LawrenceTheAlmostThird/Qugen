@@ -7,6 +7,8 @@ import opennlp.tools.parser.*;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.*;
+import org.supercsv.io.CsvListReader;
+import org.supercsv.prefs.CsvPreference;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -43,7 +45,7 @@ public class Qugen implements Callable<Void> {
     @Option(names = {"-n", "--normalizer"}, description = "Test the normalizer on the input.")
     boolean testNormalization;
 
-    @Option(names={"-c", "--csvformat"}, description = "Indicate that the file path leads to a a file in comma-seperated-variable format, as opposed to natural language.")
+    @Option(names={"-c", "--csvformat"}, description = "Indicate that the file path leads to a file in comma-seperated-variable format, as opposed to natural language. Files should be written with each sentence on its own line, enclosed in quotation marks.")
     boolean CSVFormat;
 
     Scanner scanner = new Scanner(System.in);
@@ -55,9 +57,23 @@ public class Qugen implements Callable<Void> {
         File inputfile;
         List<String> sentenceList = new ArrayList<>();
 
-        if (inputIsFilePath) {
+        if (inputIsFilePath && !CSVFormat) {
             inputfile = new File(input);
             sentenceList = ListSentences(new String(Files.readAllBytes(inputfile.toPath())));
+        } else if (CSVFormat) {
+            inputfile = new File(input);
+            FileReader reader = new FileReader(inputfile.getAbsolutePath());
+            CsvPreference prefs = CsvPreference.STANDARD_PREFERENCE;
+            CsvListReader csvreader = new CsvListReader(new BufferedReader(reader), prefs);
+            List<String> thisLine = csvreader.read();
+            while (thisLine != null) {
+                String thisSentence = "";
+                for (int i = 0; i < thisLine.size(); i++) {
+                    thisSentence += thisLine.get(i);
+                }
+                sentenceList.add(thisSentence);
+                thisLine = csvreader.read();
+            }
         } else {
             inputfile = null;
             sentenceList = ListSentences(input);
