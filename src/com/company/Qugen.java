@@ -256,7 +256,22 @@ public class Qugen implements Callable<Void> {
                     String replacement = new String();
                     switch (statements.get(i).getReplaceable().getType()) {
                         case "NP":
-                            replacement = "what";
+                            switch (statements.get(i).getNamed()) {
+                                case "DATE":
+                                    replacement = "when";
+                                    break;
+                                case "ORGANIZATION":
+                                    replacement = "what group";
+                                    break;
+                                case "PERSON":
+                                    replacement = "who";
+                                    break;
+                                case "TIME":
+                                    replacement = "when";
+                                    break;
+                                default:
+                                    replacement = "what";
+                                }
                             break;
                         case "PP":
                             replacement = "how";
