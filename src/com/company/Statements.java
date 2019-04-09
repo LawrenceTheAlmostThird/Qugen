@@ -3,6 +3,9 @@ package com.company;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.parser.Parse;
+import opennlp.tools.tokenize.Tokenizer;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.Span;
 
 import java.io.FileInputStream;
@@ -14,6 +17,7 @@ import java.util.Stack;
 public class Statements {
     private Parse sentence;
     private Parse replaceable;
+    private Span tokenSpan;
     private String named = "";
 
     public static List<Statements> statementsFactory(Parse sentence, boolean quiet) throws Exception {
@@ -39,28 +43,24 @@ public class Statements {
         return allPossibleStatements;
     }
 
-    private void setNamed(TokenNameFinderModel dateFinderModel, TokenNameFinderModel orgFinderModel, TokenNameFinderModel personFinderModel, TokenNameFinderModel timeFinderModel) {
+    private void setNamed(TokenNameFinderModel dateFinderModel, TokenNameFinderModel orgFinderModel, TokenNameFinderModel personFinderModel, TokenNameFinderModel timeFinderModel) throws Exception {
         NameFinderME dateFinder = new NameFinderME(dateFinderModel);
         NameFinderME orgFinder = new NameFinderME(orgFinderModel);
         NameFinderME personFinder = new NameFinderME(personFinderModel);
         NameFinderME timeFinder = new NameFinderME(timeFinderModel);
-        Span dateSpans[] = dateFinder.find(replaceable.getCoveredText().split(" "));
-        Span orgSpans[] = orgFinder.find(replaceable.getCoveredText().split(" "));
-        Span personSpans[] = personFinder.find(replaceable.getCoveredText().split(" "));
-        Span timeSpans[] = timeFinder.find(replaceable.getCoveredText().split(" "));
 
-        if (dateSpans.length != 0) {
-            named = "DATE";
-        } else if (orgSpans.length != 0) {
-            named = "ORGANIZATION";
-        } else if (personSpans.length != 0) {
-            named = "PERSON";
-        } else if (timeSpans.length != 0) {
-            named = "TIME";
-        }
+        Span[] dateSpans = dateFinder.find(sentence.getCoveredText().split(" "));
+        Span[] orgSpans = orgFinder.find(sentence.getCoveredText().split(" "));
+        Span[] personSpans = personFinder.find(sentence.getCoveredText().split(" "));
+        Span[] timeSpans = timeFinder.find(sentence.getCoveredText().split(" "));
+
+        assignNameOrConflict(dateSpans, "DATE");
+        assignNameOrConflict(orgSpans, "ORGANIZATION");
+        assignNameOrConflict(personSpans, "PERSON");
+        assignNameOrConflict(timeSpans, "TIME");
     }
 
-    private static void addThoseFromTag(String type, Parse sentence, List<Statements> allPossibleStatements, boolean quiet) {
+    private static void addThoseFromTag(String type, Parse sentence, List<Statements> allPossibleStatements, boolean quiet) throws Exception {
 
         boolean foundAllPhrases = false;
         int found = 0;
@@ -81,15 +81,17 @@ public class Statements {
                 return;
             } else {
                 found++;
+                Span tokenSpan = convertCharSpanToTokenSpan(sentence, phrase.getSpan());
+                System.out.println("tokenSpan is " + tokenSpan.toString());
+                allPossibleStatements.add(new Statements(sentence, phrase, tokenSpan));
             }
-
-            allPossibleStatements.add(new Statements(sentence, phrase));
         }
     }
 
-    private Statements(Parse sentence, Parse replaceable) {
+    private Statements(Parse sentence, Parse replaceable, Span tokenSpan) {
         this.sentence = sentence;
         this.replaceable = replaceable;
+        this.tokenSpan = tokenSpan;
     }
 
     private static Parse findType(String type, Parse parse, int alreadyFound, boolean quiet) {
@@ -119,12 +121,51 @@ public class Statements {
         return null;
     }
 
+    public static Span convertCharSpanToTokenSpan(Parse parentSentence, Span charSpan) throws Exception {
+
+        try (InputStream modelIn = new FileInputStream("opennlpmodels/en-token.bin")) {
+            TokenizerModel tokmodel = new TokenizerModel(modelIn);
+            Tokenizer tokenizer = new TokenizerME(tokmodel);
+            String[] tokens = tokenizer.tokenize(parentSentence.getCoveredText());
+            int startToken = 0;
+            int endToken = 0;
+            int i = 0;
+            do {
+                i += tokens[startToken].length() + 1;
+                startToken++;
+                endToken++;
+            } while (i < charSpan.getStart());
+            do {
+                i += tokens[endToken].length() + 1;
+                endToken++;
+            } while (i < charSpan.getEnd());
+
+            Span tokenSpan = new Span(startToken, endToken);
+            return tokenSpan;
+        }
+    }
+
+    public void assignNameOrConflict(Span[] namedEntitySpans, String name) {
+        for (int i = 0; i < namedEntitySpans.length; i++) {
+            if (namedEntitySpans[i].intersects(tokenSpan)) {
+                if (!named.equals(name) && !named.equals("") || named.equals("CONFLICTING NAMES")) {
+                    named = "CONFLICTING NAMES";
+                } else named = name;
+            }
+        }
+        return;
+    }
+
     public Parse getSentence() {
         return sentence;
     }
 
     public Parse getReplaceable() {
         return replaceable;
+    }
+
+    public Span getTokenSpan() {
+        return tokenSpan;
     }
 
     public String getNamed() {
