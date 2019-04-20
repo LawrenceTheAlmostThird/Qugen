@@ -1,10 +1,8 @@
 package com.company;
 import opennlp.tools.chunker.ChunkerME;
-import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.cmdline.parser.ParserTool;
 import opennlp.tools.lemmatizer.DictionaryLemmatizer;
 import opennlp.tools.parser.*;
-import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.*;
 import org.supercsv.io.CsvListReader;
@@ -39,8 +37,8 @@ public class Qugen implements Callable<Void> {
     @Option(names = {"-f", "--file"}, description = "Indicate that INPUT is a file path, not a sentence to be transformed. Files should be in a human-readable format, with each sentence to be transformed written in natural language, one after the other.")
     boolean inputIsFilePath;
 
-    @Option(names = {"-g", "--gui"}, description = "Open the AWT/Swing gui.")
-    boolean launchGui;
+    //@Option(names = {"-g", "--gui"}, description = "Open the AWT/Swing gui.")
+    //boolean launchGui;
 
     @Option(names = {"-n", "--normalizer"}, description = "Test the normalizer on the input.")
     boolean testNormalization;
@@ -123,34 +121,21 @@ public class Qugen implements Callable<Void> {
 
     }
 
-    private void testNormalization(String statement) throws Exception {
-        try (InputStream modelIn = new FileInputStream("opennlpmodels/en-token.bin")) {
-            TokenizerModel tokmodel = new TokenizerModel(modelIn);
-            Tokenizer tokenizer = new TokenizerME(tokmodel);
-            String[] tokens = tokenizer.tokenize(statement);
-            String whitespaced = tokens[0];
-            for (int i = 1; i < tokens.length; i++) {
-                whitespaced = whitespaced.concat(" " + tokens[i]);
-            }
-            if (!quiet) System.out.println(whitespaced);
-
-            //tag pos
-            try (InputStream posmodelIn = new FileInputStream("opennlpmodels/en-pos-maxent.bin")) {
-                POSModel posmodel = new POSModel(posmodelIn);
-                POSTaggerME tagger = new POSTaggerME(posmodel);
-                String[] tags = tagger.tag(tokens);
-                //TODO determine pos error
-
-                try (InputStream lemModelIn = new FileInputStream("opennlpmodels/en-lemmatizer.dict")) {
-                    DictionaryLemmatizer lemmatizer = new DictionaryLemmatizer(lemModelIn);
-                    String[] lemmas = lemmatizer.lemmatize(tokens, tags);
-                    System.out.println(Arrays.toString(lemmas));
-                }
-            }
-        }
-
-        return;
+    private void testNormalization(String statement) {
+    Tokenizer tokenizer = NLPResourcesSingleton.getInstance().tokenizer;
+    String[] tokens = tokenizer.tokenize(statement);
+    String whitespaced = tokens[0];
+    for (int i = 1; i < tokens.length; i++) {
+        whitespaced = whitespaced.concat(" " + tokens[i]);
     }
+    if (!quiet) System.out.println(whitespaced);
+
+    POSTaggerME tagger = NLPResourcesSingleton.getInstance().tagger;
+    String[] tags = tagger.tag(tokens);
+    DictionaryLemmatizer lemmatizer = NLPResourcesSingleton.getInstance().lemmatizer;
+    String[] lemmas = lemmatizer.lemmatize(tokens, tags);
+    System.out.println(Arrays.toString(lemmas));
+}
 
     public List<String> ListSentences(String content) throws Exception {
         char[] eoschars = {'.', '?', '!'};
@@ -171,151 +156,119 @@ public class Qugen implements Callable<Void> {
 
     public String genQuestion(String statement) throws Exception {
         //tokenize
-        try (InputStream modelIn = new FileInputStream("opennlpmodels/en-token.bin")) {
-            TokenizerModel tokmodel = new TokenizerModel(modelIn);
-            Tokenizer tokenizer = new TokenizerME(tokmodel);
-            String[] tokens = tokenizer.tokenize(statement);
-            String whitespaced = tokens[0];
-            for (int i = 1; i < tokens.length; i++) {
-                whitespaced = whitespaced.concat(" " + tokens[i]);
-            }
-            if (!quiet) System.out.println(whitespaced);
+        Tokenizer tokenizer = NLPResourcesSingleton.getInstance().tokenizer;
+        String[] tokens = tokenizer.tokenize(statement);
+        String whitespaced = tokens[0];
+        for (int i = 1; i < tokens.length; i++) {
+            whitespaced = whitespaced.concat(" " + tokens[i]);
+        }
+        if (!quiet) System.out.println(whitespaced);
 
-            //tag pos
-            try (InputStream posmodelIn = new FileInputStream("opennlpmodels/en-pos-maxent.bin")) {
-                POSModel posmodel = new POSModel(posmodelIn);
-                POSTaggerME tagger = new POSTaggerME(posmodel);
-                String[] tags = tagger.tag(tokens);
-                //TODO determine pos error
+        //tag pos
+        POSTaggerME tagger = NLPResourcesSingleton.getInstance().tagger;
+        String[] tags = tagger.tag(tokens);
+        //TODO determine pos error
 
-                //chunk sentance
-                try (InputStream chunkmodelIn = new FileInputStream("opennlpmodels/en-chunker.bin")) {
-                    ChunkerModel chunkmodel = new ChunkerModel(chunkmodelIn);
-                    ChunkerME chunker = new ChunkerME(chunkmodel);
-                    String chunks[] = chunker.chunk(tokens, tags);
-                    //TODO determine chunking error
+        //chunk sentance
+        ChunkerME chunker = NLPResourcesSingleton.getInstance().chunker;
+        String chunks[] = chunker.chunk(tokens, tags);
+        //TODO determine chunking error
+        //TODO rank chunks on predicted entropy
+        //possibly use named entity recognition?
+        //named entities probably have high entropy
 
-                    //TODO rank chunks on predicted entropy
-
-                    //possibly use named entity recognition?
-                    //named entities probably have high entropy
-
-                }
-
-            }
-
-            //parse
-            InputStream parsemodelIn = new FileInputStream("opennlpmodels/en-parser-chunking.bin");
-            try {
-                ParserModel parsermodel = new ParserModel(parsemodelIn);
-                Parser parser = ParserFactory.create(parsermodel);
-                Parse[] parses = ParserTool.parseLine(whitespaced, parser, 1);
-                if (!quiet) parses[0].show();
-                //determine if it's a question word by a quick scan of the nodes
-                Parse[] tagNodes = parses[0].getTagNodes();
-                for (int i = 0; i < tagNodes.length; i++) {
-                    if (tagNodes[i].getType().equals("WDT") || tagNodes[i].getType().equals("WP") || tagNodes[i].getType().equals("WP$") || tagNodes[i].getType().equals("WRB")) {
-                        if (!quiet) System.out.println("Warning: This statement contains WH- words. Please use statements of fact.");
-                        if (!nonInteractive && !quiet) {
-                            boolean confirmation = askUserForConfirmation();
-                            if (!confirmation) {
-                                return "";
-                            }
-                        }
-                    }
-                }
-                //scan nodes for SBARQ
-                //catches non-statements (questions) and throw an error
-                if (searchFor("SBARQ", parses[0])) {
-                    if (!quiet) System.out.println("Warning: This statement contains an SBARQ tag. Please use statements of fact.");
-                    if (!nonInteractive && !quiet) {
-                        boolean confirmation = askUserForConfirmation();
-                        if (!confirmation) {
-                            return "";
-                        }
-                    }
-                }
-                if (!quiet) System.out.println(parses[0].getProb());
-                if (parses[0].getProb() <= -2) {
-                    if (!quiet) System.out.println("Warning: This statement may be incorrectly parsed.");
-                    if (!nonInteractive && !quiet) {
-                        boolean confirmation = askUserForConfirmation();
-                        if (!confirmation) {
-                            return "";
-                        }
-                    }
-                }
-
-                //a statement contains the parse, and the sub-parse that can be replaced.
-                List<Statements> statements = Statements.statementsFactory(parses[0], quiet);
-                List<String> candidates = new ArrayList<String>();
-
-                for (int i = 0; i < statements.size(); i++) {
-                    String candidate = statements.get(i).getSentence().toString();
-
-                    String replacement = new String();
-                    switch (statements.get(i).getReplaceable().getType()) {
-                        case "NP":
-                            switch (statements.get(i).getNamed()) {
-                                case "DATE":
-                                    replacement = "when";
-                                    break;
-                                case "ORGANIZATION":
-                                    replacement = "what group";
-                                    break;
-                                case "PERSON":
-                                    replacement = "who";
-                                    break;
-                                case "TIME":
-                                    replacement = "when";
-                                    break;
-                                default:
-                                    replacement = "what";
-                                }
-                            break;
-                        case "PP":
-                            replacement = "how";
-                            break;
-                    }
-
-                    candidate = candidate.substring(0, statements.get(i).getReplaceable().getSpan().getStart())
-                            + replacement
-                            + candidate.substring(statements.get(i).getReplaceable().getSpan().getEnd())
-                            + "?";
-                    candidate = candidate.substring(0,1).toUpperCase() + candidate.substring(1);
-
-                    if (!quiet) System.out.println(candidate);
-                    candidates.add(candidate);
-                }
-
-                //afterwards, parse the new sentence. is it OK?
-                for (int i = 0; i < candidates.size(); i++) {
-                    Parse[] candidateParses = ParserTool.parseLine(whitespaced, parser, 1);
-                }
-                //create question by rearranging parse tree based on entropy!
-                //estimate error
-                //ask user for confirmation if error too high
-                //perhaps use a message pattern to talk to UI?
-                if (!candidates.isEmpty()) {
-                    return candidates.get(0);
-                } else throw new Exception("Candidate could not be found.");
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (parsemodelIn != null) {
-                    try {
-                        parsemodelIn.close();
-                    } catch (IOException e) {
-                        //no op
+        //parse
+        Parser parser = NLPResourcesSingleton.getInstance().parser;
+        Parse[] parses = ParserTool.parseLine(whitespaced, parser, 1);
+        if (!quiet) parses[0].show();
+        //determine if it's a question word by a quick scan of the nodes
+        Parse[] tagNodes = parses[0].getTagNodes();
+        for (int i = 0; i < tagNodes.length; i++) {
+            if (tagNodes[i].getType().equals("WDT") || tagNodes[i].getType().equals("WP") || tagNodes[i].getType().equals("WP$") || tagNodes[i].getType().equals("WRB")) {
+                if (!quiet) System.out.println("Warning: This statement contains WH- words. Please use statements of fact.");
+                if (!nonInteractive && !quiet) {
+                    boolean confirmation = askUserForConfirmation();
+                    if (!confirmation) {
+                        return "";
                     }
                 }
             }
         }
+        //scan nodes for SBARQ
+        //catches non-statements (questions) and throw an error
+        if (searchFor("SBARQ", parses[0])) {
+            if (!quiet) System.out.println("Warning: This statement contains an SBARQ tag. Please use statements of fact.");
+            if (!nonInteractive && !quiet) {
+                boolean confirmation = askUserForConfirmation();
+                if (!confirmation) {
+                    return "";
+                }
+            }
+        }
+        if (!quiet) System.out.println(parses[0].getProb());
+        if (parses[0].getProb() <= -2) {
+            if (!quiet) System.out.println("Warning: This statement may be incorrectly parsed.");
+            if (!nonInteractive && !quiet) {
+                boolean confirmation = askUserForConfirmation();
+                if (!confirmation) {
+                    return "";
+                }
+            }
+        }
 
-        //return error
-        throw new Exception("Candidate could not be found.");
-    }
+        //a statement contains the parse, and the sub-parse that can be replaced.
+        List<Statements> statements = Statements.statementsFactory(parses[0], quiet);
+        List<String> candidates = new ArrayList<String>();
+
+        for (int i = 0; i < statements.size(); i++) {
+            String candidate = statements.get(i).getSentence().toString();
+
+            String replacement = new String();
+            switch (statements.get(i).getReplaceable().getType()) {
+                case "NP":
+                    switch (statements.get(i).getNamed()) {
+                        case "DATE":
+                            replacement = "what date";
+                            break;
+                        case "ORGANIZATION":
+                            replacement = "what group";
+                            break;
+                        case "PERSON":
+                            replacement = "who";
+                            break;
+                        case "TIME":
+                            replacement = "when";
+                            break;
+                        default:
+                            replacement = "what";
+                    }
+                    break;
+                    case "PP":
+                        replacement = "how";
+                        break;
+            }
+
+            candidate = candidate.substring(0, statements.get(i).getReplaceable().getSpan().getStart() - statements.get(i).getSentence().getSpan().getStart())
+                    + replacement
+                    + candidate.substring(statements.get(i).getReplaceable().getSpan().getEnd() - statements.get(i).getSentence().getSpan().getStart())
+                    + "?";
+            candidate = candidate.substring(0,1).toUpperCase() + candidate.substring(1);
+
+            if (!quiet) System.out.println(candidate);
+            candidates.add(candidate);
+        }
+
+        //afterwards, parse the new sentence. is it OK?
+        for (int i = 0; i < candidates.size(); i++) {
+            Parse[] candidateParses = ParserTool.parseLine(whitespaced, parser, 1);
+        }
+        //create question by rearranging parse tree based on entropy!
+        //estimate error
+        //ask user for confirmation if error too high
+        if (!candidates.isEmpty()) {
+            return candidates.get(0);
+        } else throw new Exception("Candidate could not be found.");
+}
 
     private boolean askUserForConfirmation() {
         while (true) {
@@ -330,7 +283,7 @@ public class Qugen implements Callable<Void> {
         }
     }
 
-    private boolean searchFor(String type, Parse parse) {
+    public static boolean searchFor(String type, Parse parse) {
         if (parse.getType().equals(type)) {
             return true;
         } else {

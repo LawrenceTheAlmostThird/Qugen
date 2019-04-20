@@ -1,15 +1,10 @@
 package com.company;
 
 import opennlp.tools.namefind.NameFinderME;
-import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.parser.Parse;
 import opennlp.tools.tokenize.Tokenizer;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.Span;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -22,32 +17,31 @@ public class Statements {
 
     public static List<Statements> statementsFactory(Parse sentence, boolean quiet) throws Exception {
         List<Statements> allPossibleStatements = new ArrayList<Statements>();
+        List<Statements> baseStatements = new ArrayList<Statements>();
 
-        //find all noun phrases
-        addThoseFromTag("NP", sentence, allPossibleStatements, quiet);
+        //find statements
+        addThoseFromTag("S", sentence, baseStatements, quiet);
+        //find all noun phrases for each statement
+        for (int i = 0; i < baseStatements.size(); i++) {
+            if (!Qugen.searchFor("CC", baseStatements.get(i).replaceable.getChildren()[0])) { //if not connected by conjunction
+                addThoseFromTag("NP", baseStatements.get(i).replaceable, allPossibleStatements, quiet);
+            }
+        }
         //find all prepositional phrases
         //addThoseFromTag("PP", sentence, allPossibleStatements);
 
-        InputStream dateFinderIn = new FileInputStream("opennlpmodels/en-ner-date.bin");
-        TokenNameFinderModel dateFinder = new TokenNameFinderModel(dateFinderIn);
-        InputStream orgFinderIn = new FileInputStream("opennlpmodels/en-ner-organization.bin");
-        TokenNameFinderModel orgFinder = new TokenNameFinderModel(orgFinderIn);
-        InputStream personFinderIn = new FileInputStream("opennlpmodels/en-ner-person.bin");
-        TokenNameFinderModel personFinder = new TokenNameFinderModel(personFinderIn);
-        InputStream timeFinderIn = new FileInputStream("opennlpmodels/en-ner-time.bin");
-        TokenNameFinderModel timeFinder = new TokenNameFinderModel(timeFinderIn);
         for (int i = 0; i < allPossibleStatements.size(); i++) {
-            allPossibleStatements.get(i).setNamed(dateFinder, orgFinder, personFinder, timeFinder);
+            allPossibleStatements.get(i).setNamed();
         }
 
         return allPossibleStatements;
     }
 
-    private void setNamed(TokenNameFinderModel dateFinderModel, TokenNameFinderModel orgFinderModel, TokenNameFinderModel personFinderModel, TokenNameFinderModel timeFinderModel) throws Exception {
-        NameFinderME dateFinder = new NameFinderME(dateFinderModel);
-        NameFinderME orgFinder = new NameFinderME(orgFinderModel);
-        NameFinderME personFinder = new NameFinderME(personFinderModel);
-        NameFinderME timeFinder = new NameFinderME(timeFinderModel);
+    private void setNamed() {
+        NameFinderME dateFinder = NERResourcesSingleton.getInstance().dateFinder;
+        NameFinderME orgFinder = NERResourcesSingleton.getInstance().orgFinder;
+        NameFinderME personFinder = NERResourcesSingleton.getInstance().personFinder;
+        NameFinderME timeFinder = NERResourcesSingleton.getInstance().timeFinder;
 
         Span[] dateSpans = dateFinder.find(sentence.getCoveredText().split(" "));
         Span[] orgSpans = orgFinder.find(sentence.getCoveredText().split(" "));
@@ -82,7 +76,6 @@ public class Statements {
             } else {
                 found++;
                 Span tokenSpan = convertCharSpanToTokenSpan(sentence, phrase.getSpan());
-                System.out.println("tokenSpan is " + tokenSpan.toString());
                 allPossibleStatements.add(new Statements(sentence, phrase, tokenSpan));
             }
         }
@@ -121,28 +114,24 @@ public class Statements {
         return null;
     }
 
-    public static Span convertCharSpanToTokenSpan(Parse parentSentence, Span charSpan) throws Exception {
+    public static Span convertCharSpanToTokenSpan(Parse parentSentence, Span charSpan) {
+        Tokenizer tokenizer = NLPResourcesSingleton.getInstance().tokenizer;
+        String[] tokens = tokenizer.tokenize(parentSentence.getCoveredText());
+        int startToken = 0;
+        int endToken = 0;
+        int i = parentSentence.getSpan().getStart(); //usually 0, except if the parent sentance was sliced up
+        do {
+            i += tokens[startToken].length() + 1;
+            startToken++;
+            endToken++;
+        } while (i < charSpan.getStart());
+        do {
+            i += tokens[endToken].length() + 1;
+            endToken++;
+        } while (i < charSpan.getEnd());
 
-        try (InputStream modelIn = new FileInputStream("opennlpmodels/en-token.bin")) {
-            TokenizerModel tokmodel = new TokenizerModel(modelIn);
-            Tokenizer tokenizer = new TokenizerME(tokmodel);
-            String[] tokens = tokenizer.tokenize(parentSentence.getCoveredText());
-            int startToken = 0;
-            int endToken = 0;
-            int i = 0;
-            do {
-                i += tokens[startToken].length() + 1;
-                startToken++;
-                endToken++;
-            } while (i < charSpan.getStart());
-            do {
-                i += tokens[endToken].length() + 1;
-                endToken++;
-            } while (i < charSpan.getEnd());
-
-            Span tokenSpan = new Span(startToken, endToken);
-            return tokenSpan;
-        }
+        Span tokenSpan = new Span(startToken, endToken);
+        return tokenSpan;
     }
 
     public void assignNameOrConflict(Span[] namedEntitySpans, String name) {
