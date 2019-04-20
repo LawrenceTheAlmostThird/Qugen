@@ -1,7 +1,7 @@
 # Qugen
 A question generator built with OpenNLP.
 
-To use, navigate to Qugen/artifacts/QuestionGenerator_jar, and call:
+To use, download the latest build and unzip it. Then type:
 java -jar QuestionGenerator.jar -h
 
 This should print the help file, providing further instruction, and satisfy the first task on the project contract.
