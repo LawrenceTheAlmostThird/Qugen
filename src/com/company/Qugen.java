@@ -19,7 +19,7 @@ import java.util.concurrent.Callable;
 import java.util.Scanner;
 import opennlp.tools.sentdetect.*;
 
-@Command(description = "Transform statements of fact into questions.", name = "qugen",  mixinStandardHelpOptions = true, version = "Question Generator 0.1")
+@Command(description = "Transform statements of fact into questions.", name = "qugen",  mixinStandardHelpOptions = true, version = "Question Generator v0.1.2-alpha")
 public class Qugen implements Callable<Void> {
 
     @Parameters(paramLabel = "OUTPUT", index = "0", description = "File to write to.")
