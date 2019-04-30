@@ -20,7 +20,11 @@ public class Statements {
         List<Statements> baseStatements = new ArrayList<Statements>();
 
         //find statements
-        addThoseFromTag("S", sentence, baseStatements, quiet);
+        if (Qugen.searchFor("CC", sentence)) {
+            addThoseFromTag("S", sentence, baseStatements, quiet);
+        } else {
+            addThoseFromTag("TOP", sentence, baseStatements, quiet);
+        }
         //find all noun phrases for each statement
         for (int i = 0; i < baseStatements.size(); i++) {
             if (!Qugen.searchFor("CC", baseStatements.get(i).replaceable.getChildren()[0])) { //if not connected by conjunction
@@ -47,6 +51,10 @@ public class Statements {
         Span[] orgSpans = orgFinder.find(sentence.getCoveredText().split(" "));
         Span[] personSpans = personFinder.find(sentence.getCoveredText().split(" "));
         Span[] timeSpans = timeFinder.find(sentence.getCoveredText().split(" "));
+
+        if (Qugen.searchFor("PRP", replaceable)) {
+            assignNameOrConflict("PERSON");
+        }
 
         assignNameOrConflict(dateSpans, "DATE");
         assignNameOrConflict(orgSpans, "ORGANIZATION");
@@ -132,6 +140,13 @@ public class Statements {
 
         Span tokenSpan = new Span(startToken, endToken);
         return tokenSpan;
+    }
+
+    public void assignNameOrConflict(String name) {
+                if (!named.equals(name) && !named.equals("") || named.equals("CONFLICTING NAMES")) {
+                    named = "CONFLICTING NAMES";
+                } else named = name;
+        return;
     }
 
     public void assignNameOrConflict(Span[] namedEntitySpans, String name) {

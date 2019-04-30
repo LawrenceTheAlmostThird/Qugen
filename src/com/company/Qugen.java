@@ -288,7 +288,10 @@ public class Qugen implements Callable<Void> {
             return true;
         } else {
             for (int i = 0; i < parse.getChildCount(); i++) {
-                searchFor(type, parse.getChildren()[i]);
+                Parse[] parseChildren = parse.getChildren();
+                if (searchFor(type, parseChildren[i])) {
+                    return true;
+                }
             }
             return false;
         }
